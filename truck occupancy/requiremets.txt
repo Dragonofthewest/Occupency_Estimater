@@ -1,0 +1,6 @@
+These are the commands to install dependencies and setup virtual environment
+python -m venv occupancy_env
+
+./occupancy_env/Scripts/activate
+
+pip install opencv-python numpy scikit-learn matplotlib scipy
