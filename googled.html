@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Upload</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload to Google Drive</h1>
+        <button id="loginBtn">Login to Google Drive</button>
+        <div id="details" style="display:none;">
+            <p id="tripDetails"></p>
+            <button id="uploadBtn">Upload File</button>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
+        const CLIENT_ID = '892851022511-nig6aev8nd4j023a17jr1dvu3r859ngr.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyDDUISbsnxQiP3Nh9PXkNp0jSURsI3seno';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+        // Parse URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const lower = params.get("lower");
+        const upper = params.get("upper");
+        const tripId = params.get("tripId");
+        const comments = params.get("comments");
+
+        // DOM Elements
+        const loginBtn = document.getElementById('loginBtn');
+        const detailsDiv = document.getElementById('details');
+        const tripDetailsElement = document.getElementById('tripDetails');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const statusElement = document.getElementById('status');
+
+        // Display trip details
+        tripDetailsElement.textContent = `Trip ID: ${tripId}\nUtilization: ${lower}% - ${upper}%\nComments: ${comments}`;
+
+        // Initialize the Google API client library
+        function initClient() {
+            gapi.client.init({
+                apiKey: 'AIzaSyDDUISbsnxQiP3Nh9PXkNp0jSURsI3seno',
+                clientId: '892851022511-nig6aev8nd4j023a17jr1dvu3r859ngr.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/drive.file'
+            }).then(function() {
+                // Listen for sign-in state changes
+                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+                
+                // Handle the initial sign-in state
+                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+            }).catch(function(error) {
+                console.error('Error initializing Google API client:', error);
+                statusElement.textContent = 'Error initializing Google API';
+            });
+        }
+
+        // Update UI based on sign-in state
+        function updateSigninStatus(isSignedIn) {
+            if (isSignedIn) {
+                loginBtn.style.display = 'none';
+                detailsDiv.style.display = 'block';
+            } else {
+                loginBtn.style.display = 'block';
+                detailsDiv.style.display = 'none';
+            }
+        }
+
+        // Handle login button click
+        loginBtn.addEventListener('click', () => {
+            gapi.auth2.getAuthInstance().signIn();
+        });
+
+        // Handle upload button click
+        uploadBtn.addEventListener('click', () => {
+            // Prepare data to upload
+            const fileContent = JSON.stringify({
+                tripId: tripId,
+                comments: comments,
+                utilization: {
+                    lower: lower,
+                    upper: upper
+                },
+                timestamp: new Date().toISOString()
+            });
+
+            // Create file in Google Drive
+            const file = new Blob([fileContent], {type: 'application/json'});
+            const metadata = {
+                'name': `trip_${tripId}_${new Date().toISOString().replace(/:/g, '-')}.json`,
+                'mimeType': 'application/json'
+            };
+
+            gapi.client.drive.files.create({
+                resource: metadata,
+                media: {
+                    mimeType: 'application/json',
+                    body: file
+                },
+                fields: 'id'
+            }).then((response) => {
+                statusElement.textContent = 'File uploaded successfully to Google Drive!';
+                console.log('File ID:', response.result.id);
+            }).catch((error) => {
+                console.error('Error uploading file:', error);
+                statusElement.textContent = 'Failed to upload file to Google Drive.';
+            });
+        });
+
+        // Load the API client and auth2 library
+        gapi.load('client:auth2', initClient);
+    </script>
+</body>
+</html>
