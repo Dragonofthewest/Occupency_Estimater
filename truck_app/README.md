@@ -24,12 +24,13 @@ This web application allows users to upload truck container images, estimate car
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/your-username/truck-utilization-app.git
-   cd truck-utilization-app
+   git clone https://github.com/Dragonofthewest/Occupency_Estimater.git
+   cd Occupency_Estimater
 
 ## Create a virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+#On linux use: source .venv/bin/activate
+# On Windows use: .venv\Scripts\activate
 
 ## Install dependencies
 pip install -r requirements.txt
