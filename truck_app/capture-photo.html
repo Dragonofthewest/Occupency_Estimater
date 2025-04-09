@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Truck Volume Estimator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    canvas {
+      display: none;
+      border: 2px solid #007bff;
+      border-radius: 10px;
+      margin: 10px auto;
+      max-width: 100%;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #nextButton {
+      display: none;
+      margin: 10px auto;
+      width: 150px;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Truck Volume Estimator</h1>
+  <p>Capture the image of the truck container and submit it for analysis.</p>
+
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
+  <div class="button-container">
+    <button id="openCamera">Open Camera</button>
+  </div>
+  <canvas id="canvas"></canvas>
+  <canvas id="hiddenCanvas" style="display: none;"></canvas>
+  <div class="button-container">
+    <button id="nextButton">Submit</button>
+  </div>
+
+  <script>
+    const openCamera = document.getElementById("openCamera");
+    const cameraInput = document.getElementById("cameraInput");
+    const canvas = document.getElementById("canvas");
+    const hiddenCanvas = document.getElementById("hiddenCanvas");
+    const nextButton = document.getElementById("nextButton");
+    const ctx = canvas.getContext("2d");
+    const hiddenCtx = hiddenCanvas.getContext("2d");
+
+    const MAX_DISPLAY_WIDTH = 600;
+    const MAX_DISPLAY_HEIGHT = 800;
+
+    openCamera.addEventListener("click", () => {
+      cameraInput.click();
+    });
+
+    function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
+      const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+      return { width: srcWidth * ratio, height: srcHeight * ratio };
+    }
+
+    cameraInput.addEventListener("change", () => {
+      const file = cameraInput.files[0];
+      if (file) {
+        const img = new Image();
+        img.onload = () => {
+          hiddenCanvas.width = img.width;
+          hiddenCanvas.height = img.height;
+          hiddenCtx.drawImage(img, 0, 0, img.width, img.height);
+
+          const dimensions = calculateAspectRatioFit(
+            img.width,
+            img.height,
+            MAX_DISPLAY_WIDTH,
+            MAX_DISPLAY_HEIGHT
+          );
+
+          canvas.width = dimensions.width;
+          canvas.height = dimensions.height;
+          canvas.style.display = "block";
+          nextButton.style.display = "block";
+          ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
+        };
+        img.src = URL.createObjectURL(file);
+      }
+    });
+
+    nextButton.addEventListener("click", async () => {
+      hiddenCanvas.toBlob(async (blob) => {
+        const formData = new FormData();
+        formData.append("image", blob);
+
+        try {
+          const response = await fetch("http://127.0.0.1:5000/estimate", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
+            // Convert canvas to base64 and store in sessionStorage
+            const base64Image = hiddenCanvas.toDataURL("image/jpeg", 0.95);
+            sessionStorage.setItem("capturedImage", base64Image);
+
+            // Redirect to next page with utilization values
+            window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
+          } else {
+            alert("Error processing the image or invalid response from server.");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to communicate with the server.");
+        }
+      }, "image/jpeg", 0.95);
+    });
+  </script>
+</body>
+</html>

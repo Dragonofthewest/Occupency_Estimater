@@ -19,7 +19,9 @@ node_modules/
 # Allow only .py and .html files
 !*.py
 !*.html
-
+!truck_app/
+!requirements.txt
+!README.md
 # Ignore specific unwanted files even if extension matches
 tempCodeRunnerFile.py
 

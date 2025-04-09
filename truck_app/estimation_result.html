@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimation Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        h1 {
+            color: #007bff;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+        input, textarea, button {
+            width: calc(100% - 20px);
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Estimation Result</h1>
+        <p id="utilization">Loading...</p>
+        
+        <!-- Trip ID Input -->
+        <label for="tripId">Trip ID:</label>
+        <input type="text" id="tripId" placeholder="Enter Trip ID" autocomplete="off">
+        
+        <!-- Comments Input -->
+        <label for="comments">Comments:</label>
+        <textarea id="comments" rows="4" placeholder="Add comments here..."></textarea>
+        
+        <!-- Submit Button -->
+        <button id="submitBtn">Submit</button>
+    </div>
+
+    <script>
+        // Simulate fetching utilization data (replace with real logic if needed)
+        const params = new URLSearchParams(window.location.search);
+        const lower = params.get("lower");
+        const upper = params.get("upper");
+
+        const utilizationElement = document.getElementById("utilization");
+        if (lower && upper) {
+            utilizationElement.textContent = `Utilization: ${lower}% - ${upper}%`;
+        } else {
+            utilizationElement.textContent = "No data available.";
+        }
+
+        // Handle the "Submit" button click
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.addEventListener("click", () => {
+            const tripId = document.getElementById("tripId").value;
+            const comments = document.getElementById("comments").value;
+
+            if (!tripId) {
+                alert("Trip ID is required.");
+                return;
+            }
+
+            // Redirect to Google Drive upload page with parameters
+            const redirectUrl = `googledrive.html?lower=${lower}&upper=${upper}&tripId=${encodeURIComponent(tripId)}&comments=${encodeURIComponent(comments)}`;
+            window.location.href = redirectUrl;
+        });
+    </script>
+</body>
+</html
