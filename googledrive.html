@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Drive Upload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: fit-content;
+      margin: 0 auto;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .details-container {
+      text-align: left;
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload to Google Drive</h1>
+    <div id="tripSection">
+      <h2>Trip Details</h2>
+      <div class="details-container">
+        <p id="tripDetails"></p>
+      </div>
+
+      <!-- No file picker needed anymore -->
+      <button id="uploadButton">Upload to Server</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const tripId = params.get("tripId") || "unknown";
+    const lower = params.get("lower") || "0";
+    const upper = params.get("upper") || "0";
+    const comments = params.get("comments") || "No comments";
+
+    const tripDetailsElement = document.getElementById("tripDetails");
+    const uploadButton = document.getElementById("uploadButton");
+    const statusElement = document.getElementById("status");
+
+    const uploadUrl = "http://localhost:5000/api/upload-to-drive";
+
+    function updateTripDetails() {
+      tripDetailsElement.innerHTML = `
+        <strong>Trip ID:</strong> ${tripId}<br>
+        <strong>Utilization:</strong> ${lower}% - ${upper}%<br>
+        <strong>Comments:</strong> ${comments}
+      `;
+    }
+
+    updateTripDetails();
+
+    function dataURLToFile(dataurl, filename) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while(n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, {type: mime});
+    }
+
+    uploadButton.addEventListener("click", async () => {
+      try {
+        statusElement.textContent = "Uploading data to server...";
+        statusElement.style.color = "blue";
+
+        const formData = new FormData();
+        formData.append("tripId", tripId);
+        formData.append("lower", lower);
+        formData.append("upper", upper);
+        formData.append("comments", comments);
+
+        const base64Image = sessionStorage.getItem("capturedImage");
+        if (base64Image) {
+          const file = dataURLToFile(base64Image, "captured.jpg");
+          formData.append("image", file);
+        } else {
+          statusElement.textContent = "No captured image found. Please capture an image first.";
+          statusElement.style.color = "red";
+          return;
+        }
+
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.message || "Server error");
+        }
+
+        const data = await response.json();
+        statusElement.textContent = `Data uploaded successfully! File IDs: ${JSON.stringify(data.fileIds)}`;
+        statusElement.style.color = "green";
+      } catch (err) {
+        console.error("Upload failed:", err);
+        statusElement.textContent = `Upload failed: ${err.message}`;
+        statusElement.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

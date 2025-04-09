@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.log
+.env
+.venv/
+service_account.json
+*.csv
+*.jpg
+*.png
+node_modules/
+.DS_Store
+
+# Ignore everything
+*
+
+# Allow only .py and .html files
+!*.py
+!*.html
+
+# Ignore specific unwanted files even if extension matches
+tempCodeRunnerFile.py
+
+# Keep .gitignore tracked
+!.gitignore
+
+
+
