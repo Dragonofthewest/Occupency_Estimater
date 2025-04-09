@@ -8,4 +8,10 @@ google-auth-oauthlib
 google-auth-httplib2
 gspread
 oauth2client
+opencv-python
+numpy
+scikit-learn
+matplotlib
+scipy
+
 
