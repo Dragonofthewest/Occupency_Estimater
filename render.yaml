@@ -1,0 +1,10 @@
+...
+
+services:
+  - type: web
+    name: occupancy-estimator
+    env: python
+    plan: free
+    buildCommand: pip install -r truck_app/requirements.txt
+    startCommand: python truck_app/app.py
+

@@ -23,6 +23,7 @@ node_modules/
 !truck_app/
 !requirements.txt
 !README.md
+!render.yaml
 # Ignore specific unwanted files even if extension matches
 tempCodeRunnerFile.py
 
