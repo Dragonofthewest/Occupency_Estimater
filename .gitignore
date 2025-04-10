@@ -210,3 +210,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 >>>>>>> d68e746d623288352e076b6d0443092d5e6d6ae2
+truck_app/service_account.json
