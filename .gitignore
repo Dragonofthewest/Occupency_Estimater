@@ -24,6 +24,8 @@ node_modules/
 !requirements.txt
 !README.md
 !render.yaml
+!service_account.json
+!templates/
 # Ignore specific unwanted files even if extension matches
 tempCodeRunnerFile.py
 

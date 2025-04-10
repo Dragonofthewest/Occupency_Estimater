@@ -7,6 +7,7 @@ import os
 import time
 import shutil
 import gc
+from flask import render_template
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
@@ -64,6 +65,19 @@ def delete_file_with_retries(filepath, retries=5, delay=1):
             time.sleep(delay)
     print(f"[FAIL] Could not delete {filepath} after {retries} retries.")
     return False
+
+@app.route('/')
+def home():
+    return render_template("capture-photo.html")
+
+@app.route('/estimation_result.html')
+def estimation_result():
+    return render_template("estimation_result.html")
+
+@app.route('/googledrive.html')
+def googledrive_result():
+    return render_template("googledrive.html")
+
 
 @app.route('/api/upload-to-drive', methods=['POST'])
 def upload_to_drive():
