@@ -192,5 +192,12 @@ def estimate():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# ✅ FOR RENDER DEPLOYMENT: Write service account from environment (optional)
+if os.getenv("SERVICE_ACCOUNT_JSON"):
+    with open("service_account.json", "w") as f:
+        f.write(os.getenv("SERVICE_ACCOUNT_JSON"))
+
+# ✅ Entry point
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000, threaded=False)
