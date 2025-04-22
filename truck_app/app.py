@@ -11,7 +11,7 @@ from flask import render_template
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-from depth import ContainerOccupancyEstimator
+from truck_app.depth import ContainerOccupancyEstimator
 
 # NEW: Sheets setup
 import gspread
