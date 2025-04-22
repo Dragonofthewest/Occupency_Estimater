@@ -121,6 +121,11 @@
 
           const result = await response.json();
           if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
+            // Convert canvas to base64 and store in sessionStorage
+            const base64Image = hiddenCanvas.toDataURL("image/jpeg", 0.95);
+            sessionStorage.setItem("capturedImage", base64Image);
+
+            // Redirect to next page with utilization values
             window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
           } else {
             alert("Error processing the image or invalid response from server.");
