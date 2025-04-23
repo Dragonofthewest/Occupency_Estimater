@@ -23,7 +23,7 @@ CORS(app)
 estimator = ContainerOccupancyEstimator()
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
+SERVICE_ACCOUNT_FILE = '/var/www/html/Occupency_Estimater/truck_app/service_account.json'
 FOLDER_ID = '1AmB8hFseXch-qAREnfXFHrmTwR4sdaQv'
 
 # NEW: Master Sheet ID
