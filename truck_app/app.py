@@ -11,7 +11,7 @@ from flask import render_template
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-from truck_app.depth import ContainerOccupancyEstimator
+from depth import ContainerOccupancyEstimator
 
 # NEW: Sheets setup
 import gspread
@@ -23,11 +23,11 @@ CORS(app)
 estimator = ContainerOccupancyEstimator()
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = '/var/www/html/Occupency_Estimater/truck_app/service_account.json'
-FOLDER_ID = '1AmB8hFseXch-qAREnfXFHrmTwR4sdaQv'
+SERVICE_ACCOUNT_FILE = 'service_account.json'
+FOLDER_ID = '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf'
 
 # NEW: Master Sheet ID
-MASTER_SHEET_ID = '1ZBYlRzjtFg7WFFOn1C_wuktkdzkmGdMN6xmFVMUpbZQ'  # <-- 🔁 Replace with your sheet ID
+MASTER_SHEET_ID = '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0'  # <-- 🔁 Replace with your sheet ID
 
 def get_drive_service():
     try:
