@@ -15,6 +15,7 @@ from depth import ContainerOccupancyEstimator
 
 # NEW: Sheets setup
 import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
 app = Flask(__name__)
@@ -42,9 +43,9 @@ def get_drive_service():
 def append_to_master_sheet(trip_id, utilization, comments, image_link):
     try:
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=scope)
-        client = gspread.authorize(credentials)
-        sheet = client.open_by_key(MASTER_SHEET_ID).worksheet('Sheet1')
+        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key('1ZBYlRzjtFg7WFFOn1C_wuktkdzkmGdMN6xmFVMUpbZQ').worksheet('Sheet1')
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sheet.append_row([trip_id, utilization, comments, image_link, timestamp])
         print(f"[SHEETS] Appended trip {trip_id} to master sheet")
