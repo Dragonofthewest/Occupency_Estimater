@@ -45,7 +45,7 @@ def append_to_master_sheet(trip_id, utilization, comments, image_link):
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
         client = gspread.authorize(creds)
-        sheet = client.open_by_key('1ZBYlRzjtFg7WFFOn1C_wuktkdzkmGdMN6xmFVMUpbZQ').worksheet('Sheet1')
+        sheet = client.open_by_key('1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0').worksheet('Sheet1')
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sheet.append_row([trip_id, utilization, comments, image_link, timestamp])
         print(f"[SHEETS] Appended trip {trip_id} to master sheet")
