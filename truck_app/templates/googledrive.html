@@ -154,65 +154,58 @@
 
     const uploadUrl = "/api/upload-to-drive";
 
-    function updateTripDetails() {
-      tripDetailsElement.innerHTML = `
-        <strong>Trip ID:</strong> ${tripId}<br>
-        <strong>Utilization:</strong> ${lower}% - ${upper}%<br>
-        <strong>Comments:</strong> ${comments}
-      `;
-    }
-
-    updateTripDetails();
-
-    function dataURLToFile(dataurl, filename) {
-      const arr = dataurl.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while(n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new File([u8arr], filename, {type: mime});
-    }
+    tripDetailsElement.innerHTML = `
+      <strong>Trip ID:</strong> ${tripId}<br>
+      <strong>Utilization:</strong> ${lower}% - ${upper}%<br>
+      <strong>Comments:</strong> ${comments}
+    `;
 
     uploadButton.addEventListener("click", async () => {
       try {
-        statusElement.textContent = "Uploading data to server...";
-        statusElement.style.color = "blue";
+        const imageUrl = sessionStorage.getItem("imageURL");
+
+        if (!imageUrl) {
+          statusElement.textContent = "No captured image found. Please capture an image first.";
+          statusElement.style.color = "red";
+          return;
+        }
+
+        statusElement.textContent = "Preparing image...";
+        statusElement.style.color = "black";
+
+        const imageBlob = await fetch(imageUrl).then(res => res.blob());
+        const imageFile = new File([imageBlob], "captured.jpg", { type: "image/jpeg" });
 
         const formData = new FormData();
         formData.append("tripId", tripId);
         formData.append("lower", lower);
         formData.append("upper", upper);
         formData.append("comments", comments);
+        formData.append("image", imageFile);
 
-        const base64Image = sessionStorage.getItem("capturedImage");
-        if (base64Image) {
-          const file = dataURLToFile(base64Image, "captured.jpg");
-          formData.append("image", file);
-        } else {
-          statusElement.textContent = "No captured image found. Please capture an image first.";
-          statusElement.style.color = "red";
-          return;
-        }
+        statusElement.textContent = "Uploading to server...";
+        statusElement.style.color = "blue";
 
         const response = await fetch(uploadUrl, {
           method: "POST",
           body: formData,
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.message || "Server error");
+          throw new Error(result.message || "Server error");
         }
 
-        const data = await response.json();
-        statusElement.textContent = `Data uploaded successfully! File IDs: ${JSON.stringify(data.fileIds)}`;
+        statusElement.textContent = "Upload successful!";
         statusElement.style.color = "green";
+
+        // Clean up
+        URL.revokeObjectURL(imageUrl);
+        sessionStorage.removeItem("imageURL");
       } catch (err) {
         console.error("Upload failed:", err);
-        statusElement.textContent = `Upload failed: ${err.message}`;
+        statusElement.textContent = "Upload failed: " + err.message;
         statusElement.style.color = "red";
       }
     });
