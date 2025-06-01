@@ -267,8 +267,8 @@
           if (result.status === "invalid") {
             messageDiv.textContent = "Please upload a valid image.";
           } else if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
-            const base64Image = hiddenCanvas.toDataURL("image/jpeg", 0.95);
-            const imageUrl = URL.createObjectURL(imageBlob);
+            // Fixed: Use 'blob' instead of undefined 'imageBlob'
+            const imageUrl = URL.createObjectURL(blob);
             sessionStorage.setItem("imageURL", imageUrl);
             window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
           } else {
