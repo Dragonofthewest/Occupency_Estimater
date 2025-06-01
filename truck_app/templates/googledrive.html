@@ -276,10 +276,16 @@
           body: formData,
         });
 
-        const result = await uploadResponse.json();
+        let result;
+        try {
+          result = await uploadResponse.json();
+        } catch (jsonError) {
+          throw new Error(`Server returned invalid response (${uploadResponse.status}): ${uploadResponse.statusText}`);
+        }
 
         if (!uploadResponse.ok) {
-          throw new Error(result.message || "Server error");
+          console.error("Server error details:", result);
+          throw new Error(result.message || `Server error (${uploadResponse.status}): ${result.error || uploadResponse.statusText}`);
         }
 
         statusElement.textContent = "Upload successful!";
