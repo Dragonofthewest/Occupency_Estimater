@@ -2,59 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Truck Volume Estimator🚚</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cent Sure🚚</title>
+
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="CentSure Logo" class="logo">
+
   <style>
+
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background-color: #f0f0f0;
+      background-color: white;
       padding: 20px;
     }
+
+    .instruction{
+      font-size: 14px;
+      color: #050505;
+    }
+
     canvas {
       display: none;
-      border: 2px solid #007bff;
+      border: 2px solid #0e0e0e;
       border-radius: 10px;
       margin: 10px auto;
       max-width: 100%;
     }
+
     button {
       padding: 10px 20px;
       font-size: 16px;
-      background-color: #007bff;
-      color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       margin-top: 10px;
     }
-    button:hover {
-      background-color: #0056b3;
+
+    #openCamera {
+      background-color: #0a0a0a;
+      color: white;
     }
+
+    #openCamera:hover {
+      background-color: #267ead;
+    }
+
     #nextButton {
       display: none;
-      margin: 10px auto;
-      width: 150px;
+      position: relative;
+      background: transparent;
+      color: #0c0c0c;
+      text-transform: uppercase;
+      overflow: hidden;
+      letter-spacing: 4px;
+      transition: 0.5s;
     }
+
+    #nextButton:hover {
+      background: #0c0c0c;
+      color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 4px #050505,
+                  0 0 8px #080808,
+                  0 0 12px #101010;
+    }
+
+    #nextButton span {
+      position: absolute;
+      display: block;
+    }
+
+    #nextButton span:nth-child(1) {
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f6fafa);
+      animation: btn-anim1 1s linear infinite;
+    }
+
+    #nextButton span:nth-child(2) {
+      top: -100%;
+      right: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, #f6fafa);
+      animation: btn-anim2 1s linear infinite;
+      animation-delay: .25s;
+    }
+
+    #nextButton span:nth-child(3) {
+      bottom: 0;
+      right: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(270deg, transparent, #060606);
+      animation: btn-anim3 1s linear infinite;
+      animation-delay: .5s;
+    }
+
+    #nextButton span:nth-child(4) {
+      bottom: -100%;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(360deg, transparent, #060606);
+      animation: btn-anim4 1s linear infinite;
+      animation-delay: .75s;
+    }
+
+    @keyframes btn-anim1 {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+
+    @keyframes btn-anim2 {
+      0% { top: -100%; }
+      50%, 100% { top: 100%; }
+    }
+
+    @keyframes btn-anim3 {
+      0% { right: -100%; }
+      50%, 100% { right: 100%; }
+    }
+
+    @keyframes btn-anim4 {
+      0% { bottom: -100%; }
+      50%, 100% { bottom: 100%; }
+    }
+
     .button-container {
       display: flex;
       justify-content: center;
       margin-top: 10px;
     }
+
+    .logo {
+      width: 150px;
+      display: block;
+      margin: 0 auto 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Truck Volume Estimator</h1>
-  <p>Capture the image of the truck container and submit it for analysis.</p>
+  
+  <p class="instruction">Capture the image of the truck container and submit it for analysis.</p>
 
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
   <div class="button-container">
     <button id="openCamera">Open Camera</button>
   </div>
+
   <canvas id="canvas"></canvas>
   <canvas id="hiddenCanvas" style="display: none;"></canvas>
+  
+  <div id="message" style="color: red; margin-top: 10px;"></div>
+
   <div class="button-container">
-    <button id="nextButton">Submit</button>
+    <button id="nextButton">
+      <span></span><span></span><span></span><span></span>
+      Submit
+    </button>
   </div>
 
   <script>
@@ -65,9 +175,10 @@
     const nextButton = document.getElementById("nextButton");
     const ctx = canvas.getContext("2d");
     const hiddenCtx = hiddenCanvas.getContext("2d");
+    const messageDiv = document.getElementById("message");
 
     const MAX_DISPLAY_WIDTH = 600;
-    const MAX_DISPLAY_HEIGHT = 800;
+    const MAX_DISPLAY_HEIGHT = 600;
 
     openCamera.addEventListener("click", () => {
       cameraInput.click();
@@ -76,32 +187,6 @@
     function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
       const ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
       return { width: srcWidth * ratio, height: srcHeight * ratio };
-    }
-
-    function resizeImage(base64, maxWidth, maxHeight, callback) {
-      const img = new Image();
-      img.onload = function () {
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth || height > maxHeight) {
-          if (width > height) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          } else {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL("image/jpeg", 0.7)); // Compress more with 0.7
-      };
-      img.src = base64;
     }
 
     cameraInput.addEventListener("change", () => {
@@ -123,7 +208,7 @@
           canvas.width = dimensions.width;
           canvas.height = dimensions.height;
           canvas.style.display = "block";
-          nextButton.style.display = "block";
+          nextButton.style.display = "inline-block";
           ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
         };
         img.src = URL.createObjectURL(file);
@@ -134,9 +219,10 @@
       hiddenCanvas.toBlob(async (blob) => {
         const formData = new FormData();
         formData.append("image", blob);
+        messageDiv.textContent = "";
 
         try {
-          const response = await fetch(`${window.location.origin}/estimate`, {
+          const response = await fetch("/estimate", {
             method: "POST",
             body: formData
           });
@@ -146,23 +232,20 @@
           }
 
           const result = await response.json();
-          if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
-            // Compress and store image before saving
-            const originalBase64 = hiddenCanvas.toDataURL("image/jpeg", 0.95);
-            resizeImage(originalBase64, 400, 400, (compressedBase64) => {
-              try {
-                sessionStorage.setItem("capturedImage", compressedBase64);
-              } catch (e) {
-                console.error("Storage error:", e);
-              }
-              window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
-            });
+
+          if (result.status === "invalid") {
+            messageDiv.textContent = "Please upload a valid image.";
+          } else if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
+            const base64Image = hiddenCanvas.toDataURL("image/jpeg", 0.95);
+            sessionStorage.setItem("capturedImage", base64Image);
+            window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
           } else {
-            alert("Error processing the image or invalid response from server.");
+            messageDiv.textContent = "Error processing the image or invalid response from server.";
           }
+
         } catch (error) {
           console.error("Error:", error);
-          alert("Failed to communicate with the server.");
+          messageDiv.textContent = "Failed to communicate with the server.";
         }
       }, "image/jpeg", 0.95);
     });

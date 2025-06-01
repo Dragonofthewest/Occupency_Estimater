@@ -11,30 +11,17 @@
       padding: 20px;
       text-align: center;
     }
+
     .container {
       background: white;
       border-radius: 10px;
+      border: 2px solid #050505;
       padding: 20px;
       box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
       max-width: fit-content;
       margin: 0 auto;
     }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px 0;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-    }
+
     .details-container {
       text-align: left;
       background-color: #f9f9f9;
@@ -42,19 +29,114 @@
       border-radius: 5px;
       margin: 10px 0;
     }
+
+    #uploadButton {
+      position: relative;
+      display: inline-block;
+      padding: 12px 25px;
+      color: #0c0c0c;
+      font-size: 16px;
+      text-transform: uppercase;
+      text-decoration: none;
+      overflow: hidden;
+      transition: 0.5s;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    #uploadButton:hover {
+      background: #0c0c0c;
+      color: #fff;
+      box-shadow: 0 0 4px #050505,
+                  0 0 8px #080808,
+                  0 0 12px #010101;
+    }
+
+    #uploadButton span {
+      position: absolute;
+      display: block;
+    }
+
+    #uploadButton span:nth-child(1) {
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f6f6f6);
+      animation: btn-anim1 1s linear infinite;
+    }
+
+    #uploadButton span:nth-child(2) {
+      top: -100%;
+      right: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, #f6f6f6);
+      animation: btn-anim2 1s linear infinite;
+      animation-delay: 0.25s;
+    }
+
+    #uploadButton span:nth-child(3) {
+      bottom: 0;
+      right: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(270deg, transparent, #060606);
+      animation: btn-anim3 1s linear infinite;
+      animation-delay: 0.5s;
+    }
+
+    #uploadButton span:nth-child(4) {
+      bottom: -100%;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(360deg, transparent, #060606);
+      animation: btn-anim4 1s linear infinite;
+      animation-delay: 0.75s;
+    }
+
+    @keyframes btn-anim1 {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+
+    @keyframes btn-anim2 {
+      0% { top: -100%; }
+      50%, 100% { top: 100%; }
+    }
+
+    @keyframes btn-anim3 {
+      0% { right: -100%; }
+      50%, 100% { right: 100%; }
+    }
+
+    @keyframes btn-anim4 {
+      0% { bottom: -100%; }
+      50%, 100% { bottom: 100%; }
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Upload to Google Drive</h1>
     <div id="tripSection">
-      <h2>Trip Details</h2>
       <div class="details-container">
         <p id="tripDetails"></p>
       </div>
 
-      <!-- No file picker needed anymore -->
-      <button id="uploadButton">Upload to Server</button>
+      <button id="uploadButton">
+        Upload to Server
+        <span></span><span></span><span></span><span></span>
+      </button>
     </div>
     <div id="status"></div>
   </div>
@@ -70,7 +152,7 @@
     const uploadButton = document.getElementById("uploadButton");
     const statusElement = document.getElementById("status");
 
-    const uploadUrl = "upload-to-drive";
+    const uploadUrl = "/api/upload-to-drive";
 
     function updateTripDetails() {
       tripDetailsElement.innerHTML = `

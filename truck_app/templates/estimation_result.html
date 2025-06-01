@@ -1,96 +1,199 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estimation Result</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f0f0;
-            padding: 20px;
-        }
-        h1 {
-            color: #007bff;
-        }
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
-        }
-        input, textarea, button {
-            width: calc(100% - 20px);
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Estimation Result</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 10px;
+      border: 2px solid #050505;
+      padding: 20px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, textarea {
+      width: calc(100% - 20px);
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    #submitBtn {
+      position: relative;
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      text-transform: uppercase;
+      background: transparent;
+      color: #0c0c0c;
+      cursor: pointer;
+      overflow: hidden;
+      letter-spacing: 4px;
+      margin-top: 15px;
+      transition: 0.5s;
+    }
+
+    #submitBtn:hover {
+      background: #0c0c0c;
+      color: #fff;
+      border-radius: 5px;
+       box-shadow: 0 0 4px #050505,
+                   0 0 8px #080808,
+                   0 0 12px #101010;
+    }
+
+    #submitBtn span {
+      position: absolute;
+      display: block;
+    }
+
+    #submitBtn span:nth-child(1) {
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f6f6f6);
+      animation: btn-anim1 1s linear infinite;
+    }
+
+    #submitBtn span:nth-child(2) {
+      top: -100%;
+      right: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(180deg, transparent, #f6f6f6);
+      animation: btn-anim2 1s linear infinite;
+      animation-delay: .25s;
+    }
+
+    #submitBtn span:nth-child(3) {
+      bottom: 0;
+      right: -100%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(270deg, transparent, #060606);
+      animation: btn-anim3 1s linear infinite;
+      animation-delay: .5s;
+    }
+
+    #submitBtn span:nth-child(4) {
+      bottom: -100%;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(360deg, transparent, #060606);
+      animation: btn-anim4 1s linear infinite;
+      animation-delay: .75s;
+    }
+
+    @keyframes btn-anim1 {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+
+    @keyframes btn-anim2 {
+      0% { top: -100%; }
+      50%, 100% { top: 100%; }
+    }
+
+    @keyframes btn-anim3 {
+      0% { right: -100%; }
+      50%, 100% { right: 100%; }
+    }
+
+    @keyframes btn-anim4 {
+      0% { bottom: -100%; }
+      50%, 100% { bottom: 100%; }
+    }
+    .logo {
+      width: 150px;
+      display: block;
+      margin: 0 auto 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Estimation Result</h1>
-        <p id="utilization">Loading...</p>
-        
-        <!-- Trip ID Input -->
-        <label for="tripId">Trip ID:</label>
-        <input type="text" id="tripId" placeholder="Enter Trip ID" autocomplete="off">
-        
-        <!-- Comments Input -->
-        <label for="comments">Comments:</label>
-        <textarea id="comments" rows="4" placeholder="Add comments here..."></textarea>
-        
-        <!-- Submit Button -->
-        <button id="submitBtn">Submit</button>
-    </div>
+  <div class="container">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-    <script>
-        // Simulate fetching utilization data (replace with real logic if needed)
-        const params = new URLSearchParams(window.location.search);
-        const lower = params.get("lower");
-        const upper = params.get("upper");
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="CentSure Logo" class="logo">
 
-        const utilizationElement = document.getElementById("utilization");
-        if (lower && upper) {
-            utilizationElement.textContent = `Utilization: ${lower}% - ${upper}%`;
-        } else {
-            utilizationElement.textContent = "No data available.";
-        }
+    <p id="utilization">Loading...</p>
 
-        // Handle the "Submit" button click
-        const submitBtn = document.getElementById("submitBtn");
-        submitBtn.addEventListener("click", () => {
-            const tripId = document.getElementById("tripId").value;
-            const comments = document.getElementById("comments").value;
+    <!-- Trip ID Input -->
+    <label for="tripId">Trip ID:</label>
+    <input type="text" id="tripId" placeholder="Enter Trip ID" autocomplete="off">
 
-            if (!tripId) {
-                alert("Trip ID is required.");
-                return;
-            }
+    <!-- Comments Input -->
+    <label for="comments">Comments:</label>
+    <textarea id="comments" rows="4" placeholder="Add comments here..."></textarea>
 
-            // Redirect to Google Drive upload page with parameters
-            const redirectUrl = `googledrive.html?lower=${lower}&upper=${upper}&tripId=${encodeURIComponent(tripId)}&comments=${encodeURIComponent(comments)}`;
-            window.location.href = redirectUrl;
-        });
-    </script>
+    <!-- Submit Button -->
+    <button id="submitBtn">
+      <span></span><span></span><span></span><span></span>
+      Submit
+    </button>
+  </div>
+
+  <!-- Haptic Click Sound (base64) -->
+  <!--<audio id="clickSound" preload="auto">
+    <source src="mixkit-fast-double-click-on-mouse-275.wav" type="audio/wav">
+            type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>-->
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const lower = params.get("lower");
+    const upper = params.get("upper");
+
+    const utilizationElement = document.getElementById("utilization");
+    if (lower && upper) {
+      utilizationElement.textContent = `Utilization: ${lower}% - ${upper}%`;
+    } else {
+      utilizationElement.textContent = "No data available.";
+    }
+
+    const submitBtn = document.getElementById("submitBtn");
+    const clickSound = document.getElementById("clickSound");
+
+    submitBtn.addEventListener("click", () => {
+      const tripId = document.getElementById("tripId").value.trim();
+      const comments = document.getElementById("comments").value;
+
+      // Play haptic sound
+      //clickSound.currentTime = 0;
+      //clickSound.play();
+
+      if (!tripId) {
+        alert("Trip ID is required.");
+        return;
+      }
+
+      const redirectUrl = `googledrive.html?lower=${lower}&upper=${upper}&tripId=${encodeURIComponent(tripId)}&comments=${encodeURIComponent(comments)}`;
+      window.location.href = redirectUrl;
+    });
+  </script>
 </body>
-</html
+</html>

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_cors import CORS
 import cv2
 import numpy as np
@@ -7,11 +7,10 @@ import os
 import time
 import shutil
 import gc
-from flask import render_template
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-from depth import ContainerOccupancyEstimator
+from depth import analyze_container_image
 
 # NEW: Sheets setup
 import gspread
@@ -21,14 +20,11 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-estimator = ContainerOccupancyEstimator()
-
 SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
-FOLDER_ID = '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf'
+SERVICE_ACCOUNT_FILE = r'D:\projects\logistics_occupancy\Occupency_Estimater\truck_app\service_account.json'
 
-# NEW: Master Sheet ID
-MASTER_SHEET_ID = '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0'  # <-- 🔁 Replace with your sheet ID
+FOLDER_ID = '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf'
+MASTER_SHEET_ID = '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0'
 
 def get_drive_service():
     try:
@@ -45,7 +41,7 @@ def append_to_master_sheet(trip_id, utilization, comments, image_link):
         scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
         client = gspread.authorize(creds)
-        sheet = client.open_by_key('1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0').worksheet('Sheet1')
+        sheet = client.open_by_key(MASTER_SHEET_ID).worksheet('Sheet1')
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sheet.append_row([trip_id, utilization, comments, image_link, timestamp])
         print(f"[SHEETS] Appended trip {trip_id} to master sheet")
@@ -77,7 +73,6 @@ def estimation_result():
 @app.route('/googledrive.html')
 def googledrive_result():
     return render_template("googledrive.html")
-
 
 @app.route('/api/upload-to-drive', methods=['POST'])
 def upload_to_drive():
@@ -124,7 +119,6 @@ def upload_to_drive():
 
         utilization = f"{lower}%-{upper}%"
 
-        # NEW: Append to master Google Sheet
         append_to_master_sheet(trip_id, utilization, comments, image_link)
 
         csv_filename = f"trip_{trip_id}.csv"
@@ -178,19 +172,29 @@ def estimate():
 
     file = request.files['image']
     image_data = file.read()
-    image = cv2.imdecode(np.frombuffer(image_data, np.uint8), cv2.IMREAD_COLOR)
 
-    if image is None:
-        return jsonify({'error': 'Invalid image'}), 400
+    temp_image_path = 'temp_image.jpg'
+    with open(temp_image_path, 'wb') as f:
+        f.write(image_data)
 
     try:
-        occupancy_range, _ = estimator.estimate_occupancy_consensus(image)
+        occupancy_range = analyze_container_image(temp_image_path)
+
+        if occupancy_range == 0:
+            return jsonify({'error': 'Upload a valid image'}), 400
+        elif occupancy_range == -1:
+            return jsonify({'error': 'Failed to analyze image'}), 500
+
         return jsonify({
-            'lower_bound': (occupancy_range[0]+ 5),
+            'lower_bound': occupancy_range[0],
             'upper_bound': occupancy_range[1]
         }), 200
     except Exception as e:
+        print(f"[ERROR] /estimate route crashed: {e}")
         return jsonify({'error': str(e)}), 500
+    finally:
+        if os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000, threaded=False)
