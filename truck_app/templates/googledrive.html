@@ -141,20 +141,15 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Upload to Google Drive</h1>
-    <div id="tripSection">
-      <div class="details-container">
-        <p id="tripDetails"></p>
-      </div>
+  <h2>Upload to Google Drive</h2>
 
-      <button id="uploadButton">
-        Upload to Server
-        <span></span><span></span><span></span><span></span>
-      </button>
+    <div>
+        <input type="file" id="imageInput" accept="image/*" required>
     </div>
-    <div id="status"></div>
-  </div>
+
+    <div>
+        <button id="uploadButton">Upload to Server</button>
+    </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
