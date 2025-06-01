@@ -7,40 +7,63 @@ import os
 import time
 import shutil
 import gc
+import json
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-from truck_app.depth import analyze_container_image
-
-# NEW: Sheets setup
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
+from truck_app.depth import analyze_container_image
 
 app = Flask(__name__)
 CORS(app)
 
-SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = 'service_account.json'
+# Define scopes for both Drive and Sheets APIs
+SCOPES = [
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/spreadsheets'
+]
 
-FOLDER_ID = '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf'
-MASTER_SHEET_ID = '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0'
+# Load FOLDER_ID and MASTER_SHEET_ID from environment variables with fallback defaults
+FOLDER_ID = os.getenv('FOLDER_ID', '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf')
+MASTER_SHEET_ID = os.getenv('MASTER_SHEET_ID', '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0')
 
 def get_drive_service():
+    """
+    Initialize and return Google Drive API service and credentials.
+    Loads credentials from SERVICE_ACCOUNT_JSON environment variable.
+    Returns (drive_service, credentials) or (None, None) on failure.
+    """
     try:
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        credentials_json = os.getenv('SERVICE_ACCOUNT_JSON')
+        print(f"[DEBUG] SERVICE_ACCOUNT_JSON value: {credentials_json[:50] if credentials_json else 'Not set'}...")  # Log first 50 chars for debugging
+        if not credentials_json:
+            print("[ERROR] SERVICE_ACCOUNT_JSON environment variable not set")
+            return None, None
+        try:
+            credentials_dict = json.loads(credentials_json)
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] Invalid SERVICE_ACCOUNT_JSON format: {e}")
+            return None, None
+        credentials = service_account.Credentials.from_service_account_info(
+            credentials_dict, scopes=SCOPES
         )
-        return build('drive', 'v3', credentials=credentials)
+        drive_service = build('drive', 'v3', credentials=credentials)
+        return drive_service, credentials
     except Exception as e:
-        print(f"[ERROR] Drive API init failed: {e}")
-        return None
+        print(f"[ERROR] Drive API init failed: {type(e).__name__}: {str(e)}")
+        return None, None
 
 def append_to_master_sheet(trip_id, utilization, comments, image_link):
+    """
+    Append trip data to the Google Sheet specified by MASTER_SHEET_ID.
+    """
     try:
-        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
-        client = gspread.authorize(creds)
+        drive_service, credentials = get_drive_service()
+        if not credentials:
+            print("[ERROR] Failed to get credentials for Sheets")
+            return
+        client = gspread.authorize(credentials)
         sheet = client.open_by_key(MASTER_SHEET_ID).worksheet('Sheet1')
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sheet.append_row([trip_id, utilization, comments, image_link, timestamp])
@@ -49,6 +72,9 @@ def append_to_master_sheet(trip_id, utilization, comments, image_link):
         print(f"[ERROR] Failed to write to master sheet: {sheet_error}")
 
 def delete_file_with_retries(filepath, retries=5, delay=1):
+    """
+    Attempt to delete a file with retries.
+    """
     for i in range(retries):
         try:
             if os.path.exists(filepath):
@@ -74,9 +100,28 @@ def estimation_result():
 def googledrive_result():
     return render_template("googledrive.html")
 
+@app.route('/test-drive')
+def test_drive():
+    """
+    Test route to verify Google Drive API connectivity.
+    """
+    drive_service, _ = get_drive_service()
+    if not drive_service:
+        return jsonify({'success': False, 'message': 'Drive connection failed'}), 500
+    try:
+        drive_service.files().list(pageSize=1).execute()
+        return jsonify({'success': True, 'message': 'Drive API connected'}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Drive API test failed: {str(e)}'}), 500
+
 @app.route('/api/upload-to-drive', methods=['POST'])
 def upload_to_drive():
+    """
+    Handle file upload to Google Drive and append data to Google Sheet.
+    """
     try:
+        print(f"[DEBUG] Form data: {request.form}")
+        print(f"[DEBUG] Files: {list(request.files.keys())}")
         trip_id = request.form.get('tripId', 'unknown')
         lower = request.form.get('lower', 0)
         upper = request.form.get('upper', 0)
@@ -90,7 +135,7 @@ def upload_to_drive():
             image_file.save(image_filename)
             print(f"[INFO] Image saved: {image_filename}")
 
-        drive_service = get_drive_service()
+        drive_service, _ = get_drive_service()
         if not drive_service:
             return jsonify({'success': False, 'message': 'Drive connection failed'}), 500
 
@@ -167,6 +212,9 @@ def upload_to_drive():
 
 @app.route('/estimate', methods=['POST'])
 def estimate():
+    """
+    Estimate container occupancy from an uploaded image.
+    """
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
 
@@ -181,7 +229,7 @@ def estimate():
         occupancy_range = analyze_container_image(temp_image_path)
 
         if occupancy_range == 0:
-            print("Invalid image uploaded")  # Correct Python logging
+            print("Invalid image uploaded")
             return jsonify({'status': 'invalid', 'message': 'Upload a valid image'}), 400
 
         elif occupancy_range == -1:
