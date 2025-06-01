@@ -26,6 +26,7 @@ node_modules/
 !render.yaml
 !service_account.json
 !templates/
+!static/
 # Ignore specific unwanted files even if extension matches
 tempCodeRunnerFile.py
 
