@@ -10,7 +10,7 @@ import gc
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.oauth2 import service_account
-from depth import analyze_container_image
+from truck_app.depth import analyze_container_image
 
 # NEW: Sheets setup
 import gspread

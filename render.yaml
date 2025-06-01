@@ -4,4 +4,4 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r truck_app/requirements.txt
-    startCommand: PYTHONPATH=./truck_app gunicorn app:app --chdir truck_app --bind 0.0.0.0:10000
+    startCommand: PYTHONPATH=. gunicorn truck_app.app:app --bind 0.0.0.0:10000
