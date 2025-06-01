@@ -123,21 +123,6 @@
       margin-top: 20px;
       font-weight: bold;
     }
-
-    #retakeButton {
-      background-color: #ff6b6b;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin: 10px;
-      font-size: 14px;
-    }
-
-    #retakeButton:hover {
-      background-color: #ff5252;
-    }
   </style>
 </head>
 <body>
@@ -152,9 +137,6 @@
         Upload to Server
         <span></span><span></span><span></span><span></span>
       </button>
-      
-      <br>
-      <button id="retakeButton">Retake Photo</button>
     </div>
     <div id="status"></div>
   </div>
@@ -168,7 +150,6 @@
 
     const tripDetailsElement = document.getElementById("tripDetails");
     const uploadButton = document.getElementById("uploadButton");
-    const retakeButton = document.getElementById("retakeButton");
     const statusElement = document.getElementById("status");
 
     const uploadUrl = "/api/upload-to-drive";
@@ -225,15 +206,6 @@
       <strong>Utilization:</strong> ${lower}% - ${upper}%<br>
       <strong>Comments:</strong> ${comments}
     `;
-
-    // Add retake photo functionality
-    retakeButton.addEventListener("click", async () => {
-      // Clean up stored image data
-      await clearStoredImage();
-      
-      // Go back to photo capture
-      window.location.href = "capture-photo.html";
-    });
 
     uploadButton.addEventListener("click", async () => {
       try {
