@@ -128,7 +128,7 @@ def analyze_container_image(image_path):
        return 0
     elif occupancy:
          percentage = int(occupancy)  # Convert string to integer
-         return [max(0, percentage - 5), min(100, percentage + 5)]  # Return ±5% range
+         return [max(0, percentage - 5), min(100, percentage + 0)]  # Return ±5% range
 
     else:
         print("Failed to analyze cargo occupancy")

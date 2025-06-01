@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cent Sure🚚</title>
 
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -10,7 +11,6 @@
   <img src="{{ url_for('static', filename='logo.png') }}" alt="CentSure Logo" class="logo">
 
   <style>
-
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -18,7 +18,7 @@
       padding: 20px;
     }
 
-    .instruction{
+    .instruction {
       font-size: 14px;
       color: #050505;
     }
@@ -65,8 +65,8 @@
       color: #fff;
       border-radius: 5px;
       box-shadow: 0 0 4px #050505,
-                  0 0 8px #080808,
-                  0 0 12px #101010;
+        0 0 8px #080808,
+        0 0 12px #101010;
     }
 
     #nextButton span {
@@ -114,23 +114,47 @@
     }
 
     @keyframes btn-anim1 {
-      0% { left: -100%; }
-      50%, 100% { left: 100%; }
+      0% {
+        left: -100%;
+      }
+
+      50%,
+      100% {
+        left: 100%;
+      }
     }
 
     @keyframes btn-anim2 {
-      0% { top: -100%; }
-      50%, 100% { top: 100%; }
+      0% {
+        top: -100%;
+      }
+
+      50%,
+      100% {
+        top: 100%;
+      }
     }
 
     @keyframes btn-anim3 {
-      0% { right: -100%; }
-      50%, 100% { right: 100%; }
+      0% {
+        right: -100%;
+      }
+
+      50%,
+      100% {
+        right: 100%;
+      }
     }
 
     @keyframes btn-anim4 {
-      0% { bottom: -100%; }
-      50%, 100% { bottom: 100%; }
+      0% {
+        bottom: -100%;
+      }
+
+      50%,
+      100% {
+        bottom: 100%;
+      }
     }
 
     .button-container {
@@ -146,8 +170,9 @@
     }
   </style>
 </head>
+
 <body>
-  
+
   <p class="instruction">Capture the image of the truck container and submit it for analysis.</p>
 
   <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;">
@@ -157,7 +182,7 @@
 
   <canvas id="canvas"></canvas>
   <canvas id="hiddenCanvas" style="display: none;"></canvas>
-  
+
   <div id="message" style="color: red; margin-top: 10px;"></div>
 
   <div class="button-container">
@@ -224,14 +249,20 @@
         try {
           const response = await fetch("/estimate", {
             method: "POST",
-            body: formData
+            body: formData,
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          let result;
+          try {
+            result = await response.json();
+          } catch (jsonError) {
+            throw new Error("Failed to parse JSON");
           }
 
-          const result = await response.json();
+          if (!response.ok) {
+            messageDiv.textContent = result.message || "Server returned an error.";
+            return;
+          }
 
           if (result.status === "invalid") {
             messageDiv.textContent = "Please upload a valid image.";
@@ -247,8 +278,10 @@
           console.error("Error:", error);
           messageDiv.textContent = "Failed to communicate with the server.";
         }
+
       }, "image/jpeg", 0.95);
     });
   </script>
 </body>
+
 </html>

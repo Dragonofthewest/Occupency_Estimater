@@ -181,7 +181,9 @@ def estimate():
         occupancy_range = analyze_container_image(temp_image_path)
 
         if occupancy_range == 0:
-            return jsonify({'error': 'Upload a valid image'}), 400
+            print("Invalid image uploaded")  # Correct Python logging
+            return jsonify({'status': 'invalid', 'message': 'Upload a valid image'}), 400
+
         elif occupancy_range == -1:
             return jsonify({'error': 'Failed to analyze image'}), 500
 
