@@ -21,7 +21,7 @@ app = Flask(__name__)
 CORS(app)
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-SERVICE_ACCOUNT_FILE = r'D:\projects\logistics_occupancy\Occupency_Estimater\truck_app\service_account.json'
+SERVICE_ACCOUNT_FILE = 'service_account.json'
 
 FOLDER_ID = '1quKgQulsinzYKgUsP9DYOKPz2qkEGyPf'
 MASTER_SHEET_ID = '1GhQUVJHZ3Aon-ILoHSSK88Pphujn9eFZlH0YDjMYtp0'
