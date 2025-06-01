@@ -123,6 +123,21 @@
       margin-top: 20px;
       font-weight: bold;
     }
+
+    #retakeButton {
+      background-color: #ff6b6b;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 14px;
+    }
+
+    #retakeButton:hover {
+      background-color: #ff5252;
+    }
   </style>
 </head>
 <body>
@@ -137,6 +152,9 @@
         Upload to Server
         <span></span><span></span><span></span><span></span>
       </button>
+      
+      <br>
+      <button id="retakeButton">Retake Photo</button>
     </div>
     <div id="status"></div>
   </div>
@@ -150,9 +168,57 @@
 
     const tripDetailsElement = document.getElementById("tripDetails");
     const uploadButton = document.getElementById("uploadButton");
+    const retakeButton = document.getElementById("retakeButton");
     const statusElement = document.getElementById("status");
 
     const uploadUrl = "/api/upload-to-drive";
+
+    // IndexedDB helper functions
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('ImageStorage', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('images')) {
+            db.createObjectStore('images');
+          }
+        };
+      });
+    }
+
+    async function getStoredImageBlob() {
+      try {
+        const db = await openDB();
+        const transaction = db.transaction(['images'], 'readonly');
+        const store = transaction.objectStore('images');
+        return new Promise((resolve, reject) => {
+          const request = store.get('capturedImage');
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      } catch (error) {
+        console.error('Error retrieving image:', error);
+        return null;
+      }
+    }
+
+    async function clearStoredImage() {
+      try {
+        const db = await openDB();
+        const transaction = db.transaction(['images'], 'readwrite');
+        const store = transaction.objectStore('images');
+        await new Promise((resolve, reject) => {
+          const request = store.delete('capturedImage');
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+        sessionStorage.removeItem('hasStoredImage');
+      } catch (error) {
+        console.error('Error clearing image:', error);
+      }
+    }
 
     tripDetailsElement.innerHTML = `
       <strong>Trip ID:</strong> ${tripId}<br>
@@ -160,20 +226,39 @@
       <strong>Comments:</strong> ${comments}
     `;
 
+    // Add retake photo functionality
+    retakeButton.addEventListener("click", async () => {
+      // Clean up stored image data
+      await clearStoredImage();
+      
+      // Go back to photo capture
+      window.location.href = "capture-photo.html";
+    });
+
     uploadButton.addEventListener("click", async () => {
       try {
-        const imageUrl = sessionStorage.getItem("imageURL");
-
-        if (!imageUrl) {
+        // Check if we have image data stored
+        const hasStoredImage = sessionStorage.getItem('hasStoredImage');
+        
+        if (!hasStoredImage) {
           statusElement.textContent = "No captured image found. Please capture an image first.";
           statusElement.style.color = "red";
           return;
         }
 
-        statusElement.textContent = "Preparing image...";
+        statusElement.textContent = "Retrieving image...";
         statusElement.style.color = "black";
 
-        const imageBlob = await fetch(imageUrl).then(res => res.blob());
+        // Get image blob from IndexedDB
+        const imageBlob = await getStoredImageBlob();
+        
+        if (!imageBlob) {
+          statusElement.textContent = "Failed to retrieve captured image. Please retake photo.";
+          statusElement.style.color = "red";
+          return;
+        }
+
+        statusElement.textContent = "Preparing upload...";
         const imageFile = new File([imageBlob], "captured.jpg", { type: "image/jpeg" });
 
         const formData = new FormData();
@@ -186,23 +271,23 @@
         statusElement.textContent = "Uploading to server...";
         statusElement.style.color = "blue";
 
-        const response = await fetch(uploadUrl, {
+        const uploadResponse = await fetch(uploadUrl, {
           method: "POST",
           body: formData,
         });
 
-        const result = await response.json();
+        const result = await uploadResponse.json();
 
-        if (!response.ok) {
+        if (!uploadResponse.ok) {
           throw new Error(result.message || "Server error");
         }
 
         statusElement.textContent = "Upload successful!";
         statusElement.style.color = "green";
 
-        // Clean up
-        URL.revokeObjectURL(imageUrl);
-        sessionStorage.removeItem("imageURL");
+        // Clean up stored image after successful upload
+        await clearStoredImage();
+        
       } catch (err) {
         console.error("Upload failed:", err);
         statusElement.textContent = "Upload failed: " + err.message;

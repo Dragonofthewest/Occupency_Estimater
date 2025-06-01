@@ -205,6 +205,40 @@
     const MAX_DISPLAY_WIDTH = 600;
     const MAX_DISPLAY_HEIGHT = 600;
 
+    // IndexedDB helper functions for storing large image data
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('ImageStorage', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('images')) {
+            db.createObjectStore('images');
+          }
+        };
+      });
+    }
+
+    async function storeImageBlob(blob) {
+      try {
+        const db = await openDB();
+        const transaction = db.transaction(['images'], 'readwrite');
+        const store = transaction.objectStore('images');
+        await new Promise((resolve, reject) => {
+          const request = store.put(blob, 'capturedImage');
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+        // Also store a simple flag in sessionStorage
+        sessionStorage.setItem('hasStoredImage', 'true');
+        return true;
+      } catch (error) {
+        console.error('Error storing image:', error);
+        return false;
+      }
+    }
+
     openCamera.addEventListener("click", () => {
       cameraInput.click();
     });
@@ -267,15 +301,13 @@
           if (result.status === "invalid") {
             messageDiv.textContent = "Please upload a valid image.";
           } else if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
-            // Store image as base64 data URL instead of blob URL for persistence
-            const imageDataUrl = hiddenCanvas.toDataURL("image/jpeg", 0.95);
-            sessionStorage.setItem("imageDataURL", imageDataUrl);
-            
-            // Also create blob URL for immediate use if needed
-            const imageUrl = URL.createObjectURL(blob);
-            sessionStorage.setItem("imageURL", imageUrl);
-            
-            window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
+            // Store image blob in IndexedDB instead of sessionStorage
+            const stored = await storeImageBlob(blob);
+            if (stored) {
+              window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
+            } else {
+              messageDiv.textContent = "Failed to store image. Please try again.";
+            }
           } else {
             messageDiv.textContent = "Error processing the image or invalid response from server.";
           }
