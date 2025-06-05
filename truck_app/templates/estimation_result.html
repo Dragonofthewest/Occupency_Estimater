@@ -37,95 +37,24 @@
       font-size: 16px;
     }
 
-    #submitBtn {
-      position: relative;
+     #submitBtn {
       display: inline-block;
       padding: 10px 20px;
       font-size: 16px;
       border: none;
       border-radius: 5px;
+      background-color: #0c0c0c;
+      color: white;
       text-transform: uppercase;
-      background: transparent;
-      color: #0c0c0c;
       cursor: pointer;
-      overflow: hidden;
-      letter-spacing: 4px;
       margin-top: 15px;
-      transition: 0.5s;
+      transition: background-color 0.3s ease;
     }
 
     #submitBtn:hover {
-      background: #0c0c0c;
-      color: #fff;
-      border-radius: 5px;
-       box-shadow: 0 0 4px #050505,
-                   0 0 8px #080808,
-                   0 0 12px #101010;
+      background-color: #267ead;
     }
 
-    #submitBtn span {
-      position: absolute;
-      display: block;
-    }
-
-    #submitBtn span:nth-child(1) {
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #f6f6f6);
-      animation: btn-anim1 1s linear infinite;
-    }
-
-    #submitBtn span:nth-child(2) {
-      top: -100%;
-      right: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(180deg, transparent, #f6f6f6);
-      animation: btn-anim2 1s linear infinite;
-      animation-delay: .25s;
-    }
-
-    #submitBtn span:nth-child(3) {
-      bottom: 0;
-      right: -100%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(270deg, transparent, #060606);
-      animation: btn-anim3 1s linear infinite;
-      animation-delay: .5s;
-    }
-
-    #submitBtn span:nth-child(4) {
-      bottom: -100%;
-      left: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(360deg, transparent, #060606);
-      animation: btn-anim4 1s linear infinite;
-      animation-delay: .75s;
-    }
-
-    @keyframes btn-anim1 {
-      0% { left: -100%; }
-      50%, 100% { left: 100%; }
-    }
-
-    @keyframes btn-anim2 {
-      0% { top: -100%; }
-      50%, 100% { top: 100%; }
-    }
-
-    @keyframes btn-anim3 {
-      0% { right: -100%; }
-      50%, 100% { right: 100%; }
-    }
-
-    @keyframes btn-anim4 {
-      0% { bottom: -100%; }
-      50%, 100% { bottom: 100%; }
-    }
     .logo {
       width: 150px;
       display: block;

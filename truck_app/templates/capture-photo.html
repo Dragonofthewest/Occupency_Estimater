@@ -51,122 +51,48 @@
 
     #nextButton {
       display: none;
-      position: relative;
-      background: transparent;
-      color: #0c0c0c;
-      text-transform: uppercase;
-      overflow: hidden;
-      letter-spacing: 4px;
-      transition: 0.5s;
+      background-color: #0a0a0a;
+      color: #fff;
+      transition: background-color 0.3s ease;
     }
 
     #nextButton:hover {
-      background: #0c0c0c;
-      color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 4px #050505,
-        0 0 8px #080808,
-        0 0 12px #101010;
-    }
-
-    #nextButton span {
-      position: absolute;
-      display: block;
-    }
-
-    #nextButton span:nth-child(1) {
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #f6fafa);
-      animation: btn-anim1 1s linear infinite;
-    }
-
-    #nextButton span:nth-child(2) {
-      top: -100%;
-      right: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(180deg, transparent, #f6fafa);
-      animation: btn-anim2 1s linear infinite;
-      animation-delay: .25s;
-    }
-
-    #nextButton span:nth-child(3) {
-      bottom: 0;
-      right: -100%;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(270deg, transparent, #060606);
-      animation: btn-anim3 1s linear infinite;
-      animation-delay: .5s;
-    }
-
-    #nextButton span:nth-child(4) {
-      bottom: -100%;
-      left: 0;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(360deg, transparent, #060606);
-      animation: btn-anim4 1s linear infinite;
-      animation-delay: .75s;
-    }
-
-    @keyframes btn-anim1 {
-      0% {
-        left: -100%;
-      }
-
-      50%,
-      100% {
-        left: 100%;
-      }
-    }
-
-    @keyframes btn-anim2 {
-      0% {
-        top: -100%;
-      }
-
-      50%,
-      100% {
-        top: 100%;
-      }
-    }
-
-    @keyframes btn-anim3 {
-      0% {
-        right: -100%;
-      }
-
-      50%,
-      100% {
-        right: 100%;
-      }
-    }
-
-    @keyframes btn-anim4 {
-      0% {
-        bottom: -100%;
-      }
-
-      50%,
-      100% {
-        bottom: 100%;
-      }
+      background-color: #267ead;
     }
 
     .button-container {
       display: flex;
       justify-content: center;
       margin-top: 10px;
+      flex-direction: column;
+      align-items: center;
     }
 
     .logo {
       width: 150px;
       display: block;
       margin: 0 auto 10px;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -186,10 +112,8 @@
   <div id="message" style="color: red; margin-top: 10px;"></div>
 
   <div class="button-container">
-    <button id="nextButton">
-      <span></span><span></span><span></span><span></span>
-      Submit
-    </button>
+    <div class="loader" id="loader"></div> <!-- Loader added above the Submit button -->
+    <button id="nextButton">Submit</button>
   </div>
 
   <script>
@@ -198,6 +122,7 @@
     const canvas = document.getElementById("canvas");
     const hiddenCanvas = document.getElementById("hiddenCanvas");
     const nextButton = document.getElementById("nextButton");
+    const loader = document.getElementById("loader");
     const ctx = canvas.getContext("2d");
     const hiddenCtx = hiddenCanvas.getContext("2d");
     const messageDiv = document.getElementById("message");
@@ -205,7 +130,6 @@
     const MAX_DISPLAY_WIDTH = 600;
     const MAX_DISPLAY_HEIGHT = 600;
 
-    // IndexedDB helper functions for storing large image data
     function openDB() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open('ImageStorage', 1);
@@ -230,7 +154,6 @@
           request.onsuccess = () => resolve();
           request.onerror = () => reject(request.error);
         });
-        // Also store a simple flag in sessionStorage
         sessionStorage.setItem('hasStoredImage', 'true');
         return true;
       } catch (error) {
@@ -279,6 +202,8 @@
         const formData = new FormData();
         formData.append("image", blob);
         messageDiv.textContent = "";
+        loader.style.display = "block";
+        nextButton.disabled = true;
 
         try {
           const response = await fetch("/estimate", {
@@ -301,7 +226,6 @@
           if (result.status === "invalid") {
             messageDiv.textContent = "Please upload a valid image.";
           } else if (result.lower_bound !== undefined && result.upper_bound !== undefined) {
-            // Store image blob in IndexedDB instead of sessionStorage
             const stored = await storeImageBlob(blob);
             if (stored) {
               window.location.href = `estimation_result.html?lower=${result.lower_bound}&upper=${result.upper_bound}`;
@@ -315,11 +239,13 @@
         } catch (error) {
           console.error("Error:", error);
           messageDiv.textContent = "Failed to communicate with the server.";
+        } finally {
+          loader.style.display = "none";
+          nextButton.disabled = false;
         }
 
       }, "image/jpeg", 0.95);
     });
   </script>
 </body>
-
 </html>
